@@ -42,18 +42,18 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
 - Clone the repository locally and go into its root folder
 
 - If you use [PyEnv](https://github.com/pyenv/pyenv), you can install Python 3.11.4 with:
-  ```sh
+  ```console
   pyenv install 3.11.4
   ```
   Use it as `global default` with `pyenv global 3.11.4` or `shell default` only for the current shell with `pyenv shell 3.11.1`. When using the latter option this of course needs to be executed for each newly opened shell.
 
 - Create Python virtual environment:
-  ```sh
+  ```console
   python -m venv venv
   ```
   
   Activate the virtual environment (it must be activated each time a new console is opened):
-  ```sh
+  ```console
   # On MacOS / Linux
   source venv/bin/activate
   
@@ -66,17 +66,17 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   The creation of the python virtual environment must be done only once, when the repository is cloned but note that **it must be activated each time a new console is opened**.
 
 - Verify whether the python virtual environment is properly activated:
-  ```sh
+  ```console
   # Run it from the folder where your documentation repository is cloned
   pip --version
   ```
   It must point to the local repository and can be seen in the output:
-  ```sh
+  ```console
   pip 23.1.2 from .../solaredge-battery-control/venv/lib/python3.11/site-packages/pip (python 3.11)
   ```
 
 - You can install all the requirements with:
-  ```sh
+  ```console
   pip install -r requirements.txt
   ```
 - :traffic_light: Before you run or schedule the script for the first time:
@@ -86,20 +86,20 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   </picture>
   
   You need to set the `storage_contol_mode` to `4. Remote Control`, before you can change any of the `storage registers` and that they are considered by the inverter. Otherwise, they will have no effect at all. You can do enable the `Remote Control` by using the `--enable_storage_remote_control_mode` argument:
-  ```sh
+  ```console
   python se_battery_control.py x.x.x.x --enable_storage_remote_control_mode
   ```
 
   Note that the above argument will also set the `storage_default_mode` to `7. Maximize self consumption`. If you would like a different one for the `storage_default_mode`, you can use the `--set_storage_default_mode <number>` argument. See below for arguments help descriptions or print it out with `--help`.
 
 - You can use the following script to start/schedule the `se_battery_control.py` script.
-  ```
+  ```console
   # For MacOS / Linux / Bash Shell under Windows
   run.sh
   ```
 
 - Alternatively, of course you can start it manually:
-  ```sh
+  ```console
   python se_battery_contro.py INVERTER_IP
   ```
   For list of all parameters use `--help`:
@@ -178,7 +178,7 @@ It is recommended for now to use it as `CronJob` due to its current [Limitations
 However, you have the following 3 options to let the script run continually:
 - As a `CronJob` (recommended): 
   Just use the provided `run.sh` script and adapts its parameters. You might want to use the `>/dev/null 2>&1d` to discard the console output of the script, so your `CronJob` logs not get too big. The script has its own log file (see [Troubleshooting & Logs](#troubleshooting--logs)). An example for running it each 3 min. would be:
-  ```sh
+  ```console
   # SolarEdge Battery Control script
   */3 * * * /<path>/solaredge-battery-control/run.sh >/dev/null 2>&1d
   ```
