@@ -1,0 +1,113 @@
+#   update_interval: 180              # Update interval if used as service / from the console
+#   upper_charging_limit: 80          # Upper charging limit in %
+#   soe_delta_charge: 10              # When the SOE drops by this amount of %, start charging again
+#   backup_reserve: 10                # Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
+#   charge_limit: 5000                # Battery maximum charge current in W
+#   period_start / period_end: 1-Jan  # Star/End date for the periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+
+defaul_config:
+  update_interval: 180
+  upper_charging_limit: 80
+  soe_delta_charge: 10
+  backup_reserve: 10
+  charge_limit: 5000
+
+periods:
+  # Hochwinter
+  - period_start: 1-Jan
+    period_end: 14-Feb
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000
+  
+  # Spätwinter & Vorfrühling
+  - period_start: 15-Feb
+    period_end: 28-Mar
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000
+  
+  # Erstfrühling
+  - period_start: 29-Mar
+    period_end: 28-Apr
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000
+  
+  # Vollfrühling
+  - period_start: 29-Apr
+    period_end: 28-May
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000      
+
+  # Frühsommer
+  - period_start: 29-May
+    period_end: 14-Jun
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000
+
+  # Hochsommer
+  - period_start: 15-Jun
+    period_end: 31-Jul
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000
+
+  # Spätsommer
+  - period_start: 1-Aug
+    period_end: 21-Aug
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000     
+
+  # Frühherbst
+  - period_start: 22-Aug
+    period_end: 21-Sep
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000   
+
+  # Vollherbst
+  - period_start: 21-Sep
+    period_end: 21-Oct
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000   
+
+  # Spätherbst
+  - period_start: 22-Oct
+    period_end: 30-Nov
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000   
+
+  # Frühwinter
+  - period_start: 1-Dec
+    period_end: 31-Dec
+    config:
+      upper_charging_limit: 80
+      soe_delta_charge: 10
+      backup_reserve: 10
+      charge_limit: 5000                                        
