@@ -79,13 +79,18 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   ```sh
   pip install -r requirements.txt
   ```
-- Before you run or schedule the script for the first time:
-  [!IMPORTANT]  
+- :traffic_light: Before you run or schedule the script for the first time:
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/light-theme/warning.svg">
+    <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg">
+  </picture>
+  
   You need to set the `storage_contol_mode` to `4. Remote Control`, before you can change any of the `storage registers` and that they are considered by the inverter. Otherwise, they will have no effect at all. You can do enable the `Remote Control` by using the `--enable_storage_remote_control_mode` argument:
   ```sh
   python se_battery_control.py x.x.x.x --enable_storage_remote_control_mode
   ```
-  Note that the above argument will also set the `storage_default_mode` to `7. Maximize self consumption`. If you would like a different one for the `storage_default_mode`, you can use the `--set_storage_default_mode <number>` argument. See below for argument help description or print it out with `--help`.
+
+  Note that the above argument will also set the `storage_default_mode` to `7. Maximize self consumption`. If you would like a different one for the `storage_default_mode`, you can use the `--set_storage_default_mode <number>` argument. See below for arguments help descriptions or print it out with `--help`.
 
 - You can use the following script to start/schedule the `se_battery_control.py` script.
   ```
