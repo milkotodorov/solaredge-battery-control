@@ -152,7 +152,7 @@ Here is the list of the parameters and their description:
 
 - `update_interval: 120`: Update interval if used as service / from the console
 - `upper_charging_limit: 80`: Upper charging limit in %
-- `soe_delta_charge: 10`: When the SOE drops by this amount of %, start charging again
+- `soe_delta_charge: 5`: When the SOE drops by this amount of %, start charging again
 - `backup_reserve: 10`: Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
 - `charge_limit: 5000`: Battery maximum charge current in W
 - `period_start: 1-Jan / period_end: 31-Dec`:  Star/End date for the time periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
@@ -162,7 +162,7 @@ You have first the `default_config` section which will be considered if the curr
 defaul_config:
   update_interval: 120
   upper_charging_limit: 80
-  soe_delta_charge: 10
+  soe_delta_charge: 5
   backup_reserve: 10
   charge_limit: 5000
 ```
