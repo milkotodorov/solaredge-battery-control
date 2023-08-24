@@ -15,11 +15,11 @@ CONFIG = []
 
 # Configuration parameters to be applied to the inverter with initial/default values. 
 # Actual values will be read from 'config.yaml'
-UPDATE_INTERVAL = 180        # Update interval if used as service / from the console
+UPDATE_INTERVAL = 120        # Update interval if used as service / from the console.
 UPPER_CHARGING_LIMIT = 80    # Upper charging limit in %
 SOE_DELTA_CHARGE = 10        # When the SOE drops by this amount of %, start charging again
 BACKUP_RESEVE = 10           # Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
-CHARGE_LIMIT = 5000          # Battery maximum charge current in W
+CHARGE_LIMIT = 5000          # Battery maximum charge power in W
 
 #
 # Reading the configuration parameters from config.yaml file.
@@ -107,11 +107,12 @@ def read_values():
 # 2: "Time of Use"
 # 3: "Backup Only"
 # 4: "Remote Control"
-def set_storage_control_mode(val=4):
-  # Retry 3 times as often the second time succeed
-  # Workaround till the issue in the 'solaredge_modbus' library if fixed
+def set_storage_control_mode(val=4, retries=3):
+  # Retrying is a workaround till the issue in the 'solaredge_modbus' library if fixed.
+  # On a second attempt often the writing to the register succeeds.
+  # GitHub issue: https://github.com/nmakel/solaredge_modbus/issues/36
   try:
-    retry_count = 4
+    retry_count = retries
     while (retry_count > 0):
       if not inverter.connected():
         inverter.connect()
@@ -121,11 +122,12 @@ def set_storage_control_mode(val=4):
 
       if (is_response_exception(reg_query)):
         LOGGER.error(f"Setting \"storage_control_mode\" (0xE004) to {val}. Error: " + str(reg_query.message))
-        LOGGER.info(f"Retrying write to register...{4 - retry_count} of 3")
+        LOGGER.info(f"Retrying write to register...{retries - retry_count + 1} of {retries}")
         if (retry_count == 0):
           raise Exception(str(reg_query.message))
         else:
           # Wait a bit before the next retry
+          LOGGER.info("Waiting for 10 sec. before the next retry...")
           time.sleep(10)
       else:
         verify_register_write("storage_control_mode", val, reg_query, reg_result)
@@ -137,11 +139,12 @@ def set_storage_control_mode(val=4):
 #
 # Set "storage_backup_reserved" (0xE008) - storage backup reserved capacity (%)
 #
-def set_storage_backup_reserved(val=10):
-  # Retry 3 times as often the second time succeed
-  # Workaround till the issue in the 'solaredge_modbus' library if fixed
+def set_storage_backup_reserved(val=10, retries=3):
+  # Retrying is a workaround till the issue in the 'solaredge_modbus' library if fixed.
+  # On a second attempt often the writing to the register succeeds.
+  # GitHub issue: https://github.com/nmakel/solaredge_modbus/issues
   try:
-    retry_count = 4
+    retry_count = retries
     while (retry_count > 0):
       if not inverter.connected():
         inverter.connect()
@@ -151,11 +154,12 @@ def set_storage_backup_reserved(val=10):
 
       if (is_response_exception(reg_query)):
         LOGGER.error(f"Setting \"storage_backup_reserved_setting\" (0xE008) to {val}%. Error: " + str(reg_query.message))
-        LOGGER.info(f"Retrying write to register...{4 - retry_count} of 3")
+        LOGGER.info(f"Retrying write to register...{retries - retry_count + 1} of {retries}")
         if (retry_count == 0):
           raise Exception(str(reg_query.message))
         else:
           # Wait a bit before the next retry
+          LOGGER.info("Waiting for 10 sec. before the next retry...")
           time.sleep(10)        
       else:
         verify_register_write("storage_backup_reserved_setting", val, reg_query, reg_result)
@@ -174,11 +178,12 @@ def set_storage_backup_reserved(val=10):
 # 4: "Maximize export"
 # 5: "Discharge to match load"
 # 7: "Maximize self consumption"
-def set_storage_default_mode(val=7):
-  # Retry 3 times as often the second time succeed
-  # Workaround till the issue in the 'solaredge_modbus' library if fixed
+def set_storage_default_mode(val=7, retries=3):
+  # Retrying is a workaround till the issue in the 'solaredge_modbus' library if fixed.
+  # On a second attempt often the writing to the register succeeds.
+  # GitHub issue: https://github.com/nmakel/solaredge_modbus/issues
   try:
-    retry_count = 4
+    retry_count = retries
     while (retry_count > 0):
       if not inverter.connected():
         inverter.connect()
@@ -188,11 +193,12 @@ def set_storage_default_mode(val=7):
     
       if (is_response_exception(reg_query)):
         LOGGER.error(f"Setting \"storage_default_mode\" (0xE00A) to {val}. Error: " + str(reg_query.message))
-        LOGGER.info(f"Retrying write to register...{4 - retry_count} of 3")
+        LOGGER.info(f"Retrying write to register...{retries - retry_count + 1} of {retries}")
         if (retry_count == 0):
           raise Exception(str(reg_query.message))
         else:
           # Wait a bit before the next retry
+          LOGGER.info("Waiting for 10 sec. before the next retry...")
           time.sleep(10)        
       else:
         verify_register_write("storage_default_mode", val, reg_query, reg_result)
@@ -350,6 +356,7 @@ def inverter_update_routine():
     set_storage_backup_reserved(BACKUP_RESEVE)    
   
   inverter.disconnect()
+
 # -------------------------------------------------------------------------------    
 
 if __name__ == "__main__":

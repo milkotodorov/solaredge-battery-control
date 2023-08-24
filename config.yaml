@@ -1,12 +1,12 @@
-#   update_interval: 180              # Update interval if used as service / from the console
+#   update_interval: 120              # Update interval if used as service / from the console
 #   upper_charging_limit: 80          # Upper charging limit in %
 #   soe_delta_charge: 10              # When the SOE drops by this amount of %, start charging again
 #   backup_reserve: 10                # Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
-#   charge_limit: 5000                # Battery maximum charge current in W
+#   charge_limit: 5000                # Battery maximum charge power in W
 #   period_start / period_end: 1-Jan  # Star/End date for the periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
 
 defaul_config:
-  update_interval: 180
+  update_interval: 120
   upper_charging_limit: 80
   soe_delta_charge: 10
   backup_reserve: 10

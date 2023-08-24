@@ -9,7 +9,7 @@ It uses the great [solaredge_modbus](https://github.com/nmakel/solaredge_modbus)
 ## What does it do?
 
 Lithium-ion batteries age notably faster when having bigger DoD (depth of discharge). See the [Battery Life vs DoD](#battery-life-vs-dod-depth-of-discharge) below for more insight. 
-Unfortunately, SolarEdge doesn't provide a way to limit the upper level of charge. One can only adjust the lower level by setting the percentage reserved for backup (so far power outages are nothing that happens daily yet...), but it can be done only manually and cannot be automated, based on a defined schedule. With this script it is possible to limit both the upper and the lower level of charge per defined period. Furthermore, it allows you eliminate the micro-charges by waiting for the battery to drop be a specified percentage before it starts charges again. Micro-charges are not as harmful as bigger DoD, but they don't bring as much benefit either Lastly with the script you can limit the charging current, based on the size of your battery. Generally lower current charges are better for the battery life. In the summer you have enough power to charge your battery slower. All these parameters can be adjusted for defined periods easily in a `YAML` configuration. For more details see the [configuration](#configuration) section.
+Unfortunately, SolarEdge doesn't provide a way to limit the upper level of charge. One can only adjust the minimum level of discharge by setting the percentage reserved for backup (so far power outages are nothing that happens daily yet...), but it can be done only manually and cannot be automated, based on a defined schedule. With this script it is possible to limit both the upper level of charge and the minimum level of discharge per defined time period. Furthermore, it allows you eliminate the micro-charges by waiting for the battery charge level to drops by a specified percentage before it starts charging it again. Micro-charges are not as harmful as bigger DoD, but they don't bring much benefit either. Lastly with the script you can limit the charging current, based on the size of your battery. Generally lower current charges are better for the battery life. In the summer you have enough power to charge your battery slower. All these parameters can be adjusted for defined time periods easily in a `YAML` configuration. For more details see the [configuration](#configuration) section. You may also want to read in a bit more detail [how the script works](#how-the-script-works).
 
 ## Battery Life vs DoD (Depth of Discharge)
 
@@ -34,6 +34,24 @@ The below graph illustrates dynamic stress tests (DST) reflecting capacity loss 
 - Case 2: 75–25% SoC has 3,000 cycles (to 90% capacity) and delivers 150,000 EU. Utilizes 50% of battery. (EV battery, new.)
 - Case 3: 85–25% SoC has 2,000 cycles. Delivers 120,000 EU. Uses 60% of battery.
 - Case 4: 100–25% SoC; long runtime with 75% use of battery. Has short life. (Mobile phone, drone, etc.)
+
+## How the script works?
+- Setting the discharge level limit: 
+  This is achieved by simply setting the `storage_backup_reserved` or `0xE008` register to the desired % level with the `BACKUP_RESEVE` parameter. The inverter will stop using the battery once this SoC (state of charge) level is reached. Of course, in event of power-outage this will be used for backup, but that would be rather exceptional case and not a daily routine.
+  > <picture>
+  >   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/light-theme/info.svg">
+  >   <img alt="Info" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/info.svg">
+  > </picture><br>
+  > Note that `SolarEdge Home Battery 48V` has a total capacity of 5.12kWh and 4.6kWh are usable. This means that already 10% are reserved and cannot be used. The backup reserved adds on top of this. So, in pursuance of having 20% SoC as lower limit, 10% backup reserve is needed.
+
+- Setting the charge level limit:
+This is achieved by changing the charging profile of the inverter to `Discharge to match load` once the SoC reaches the level specified in `upper_charge_limit` parameter. This will exclude further charging and will allow the battery to be discharged upon consumption request. The script sets `rc_cmd_mode` or `0xE00A` register to `5. Discharge to match load` as well as the `rc_cmd_timeout` or `0xE00B` to `28800` (8h) to achieve this. The timeout must be used as the default one is only 1h. After the timeout expires, the default charging profile will be used further, which the script sets by default as `7. Maximize self consumption` and it can be changed too.
+
+- Avoiding micro-charge cycles:
+Micro-charges occurs when your battery is charged at your desired rate x%, then discharged by some consumption to (x-1)% (or less) and then charged again back to x%. You want to avoid such a constant micro-charge cycles if possible. This is achieved as follows - if the SoC drops with more than the specified in the `soe_delta_charge` parameter value, it sets the charging profile register `rc_cmd_mode` or `0xE00A` again to `7. Maximize self consumption`, so the battery can be charged again back to the specified `upper_charge_limit` level as described in the point above.
+
+- Reducing battery temperature during charge:
+This is simply achieved by reducing the charging power by setting the `rc_charge_limit` or `0xE00E` register to the desired value in the `charge_limit` parameter. The default and maximum charging power is 5000W for 2 or more battery modules and less for a single battery depends on the battery model and manufacturer (for `SolarEdge Home Battery 48V` it is 2825W). According to `Battery University` [article](#battery-life-vs-dod-depth-of-discharge) above, fast charges tend to increase the internal battery temperature, which in turn fasters the battery's aging process. Although I didn't observe almost any heating of 2x `SolarEdge Home Battery 48V` (with has a capacity of 5.12kWh (4.6kWh usable) per module) with the maximum charging power, in the summer months even 1500W charging power is plenty of enough to charge your battery. In the winter months of course, fast charging will be beneficial for your self-consumption rate. So, depends on your battery capacity, you might further want to optimize its life by adjusting this configuration, especially in the summer months.
 
 ## Requirements
 The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python version manager like [PyEnv](https://github.com/pyenv/pyenv) is recommended.
@@ -80,12 +98,11 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   pip install -r requirements.txt
   ```
 - :traffic_light: Before you run or schedule the script for the first time:
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/light-theme/warning.svg">
-    <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg">
-  </picture>
-  
-  You need to set the `storage_contol_mode` to `4. Remote Control`, before you can change any of the `storage registers` and that they are considered by the inverter. Otherwise, they will have no effect at all. You can do enable the `Remote Control` by using the `--enable_storage_remote_control_mode` argument:
+  > <picture>
+  >   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/light-theme/warning.svg">
+  >   <img alt="Warning" src="https://raw.githubusercontent.com/Mqxx/GitHub-Markdown/main/blockquotes/badge/dark-theme/warning.svg">
+  > </picture><br>
+  > You need to set the `storage_contol_mode` to `4. Remote Control`, before you can change any of the `storage registers` and that they are considered by the inverter. Otherwise, they will have no effect at all. You can do enable the `Remote Control` by using the `--enable_storage_remote_control_mode` argument:
   ```console
   python se_battery_control.py x.x.x.x --enable_storage_remote_control_mode
   ```
@@ -127,38 +144,38 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   ```
 
 ## Configuration
-The configuration of the script is located in the `config.yaml` file. The script can be configured to set different parameters according to the different periods defined into the configuration file. Each period can be minimum of 1 day. You can define as many periods as needed. As a template there are 11 periods defined for the "unpacked" seasons of the year.
+The configuration of the script is located in the `config.yaml` file. The script can be configured to set different parameters according to the different time periods defined into the configuration file. Each time period can be minimum of 1 day. You can define as many time periods as needed. As a template there are 11 time periods defined for the "unpacked" seasons of the year.
 
-It works like this: when the script is started it checks in which period the current day fits. Then it set the parameters to the inverter (only the values that are different from current ones).
+It works like this: when the script is started it checks in which time period the current day fits. Then it set the parameters to the inverter (only the values that are different from current ones).
 
 Here is the list of the parameters and their description:
 
-- `update_interval: 180`: Update interval if used as service / from the console
+- `update_interval: 120`: Update interval if used as service / from the console
 - `upper_charging_limit: 80`: Upper charging limit in %
 - `soe_delta_charge: 10`: When the SOE drops by this amount of %, start charging again
 - `backup_reserve: 10`: Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
 - `charge_limit: 5000`: Battery maximum charge current in W
-- `period_start: 1-Jan / period_end: 31-Dec`:  Star/End date for the periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+- `period_start: 1-Jan / period_end: 31-Dec`:  Star/End date for the time periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
 
-You have first the `default_config` section which will be considered if the current day fits in none of the defined periods:
+You have first the `default_config` section which will be considered if the current day fits in none of the defined time periods:
 ```yaml
 defaul_config:
-  update_interval: 180
+  update_interval: 120
   upper_charging_limit: 80
   soe_delta_charge: 10
   backup_reserve: 10
   charge_limit: 5000
 ```
 
-Otherwise, if the current day fits in some of the defined periods, the values there will have a priority. Here is how the periods are defined:
+Otherwise, if the current day fits in some of the defined time periods, the values there will have a priority. Here is how the time periods are defined:
 ```yaml
 periods:
   # Hochwinter
   - period_start: 1-Jan
     period_end: 14-Feb
     config:
-      upper_charging_limit: 90
-      soe_delta_charge: 10
+      upper_charging_limit: 85
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
   
@@ -166,10 +183,10 @@ periods:
   - period_start: 15-Feb
     period_end: 28-Mar
     config:
-      upper_charging_limit: 80
+      upper_charging_limit: 75
       soe_delta_charge: 10
-      backup_reserve: 10
-      charge_limit: 5000
+      backup_reserve: 15
+      charge_limit: 2000
   ...
 ```
 
@@ -177,10 +194,10 @@ periods:
 It is recommended for now to use it as `CronJob` due to its current [Limitations](#limitations).
 However, you have the following 3 options to let the script run continually:
 - As a `CronJob` (recommended): 
-  Just use the provided `run.sh` script and adapts its parameters. You might want to use the `>/dev/null 2>&1d` to discard the console output of the script, so your `CronJob` logs not get too big. The script has its own log file (see [Troubleshooting & Logs](#troubleshooting--logs)). An example for running it each 3 min. would be:
+  Just use the provided `run.sh` script and adapts its parameters. You might want to use the `>/dev/null 2>&1` to discard the console output of the script, so your `CronJob` logs not get too big. The script has its own log file (see [Troubleshooting & Logs](#troubleshooting--logs)). An example for running it each 3 min. would be:
   ```console
   # SolarEdge Battery Control script
-  */3 * * * /<path>/solaredge-battery-control/run.sh >/dev/null 2>&1d
+  */2 * * * /<path>/solaredge-battery-control/run.sh >/dev/null 2>&1
   ```
 - As a service: 
   To run it as a service, you must edit the `se_battery_control.py` script and adapt it at the end (e.g. disable the single run of `inverter_update_routine()` and enable the infinite loop afterwards).
@@ -195,4 +212,4 @@ When the script is started from the `console` it prints out the same information
 ## Limitations
 The current solution for adding the storage registers to the `solaredge_modbus` library by adding them as an additional Class with `Endian.Little` as `wordorder`, works most of the time. However, it fails when it changes the following registers `storage_control_mode`, `storage_default_mode` and `storage_backup_reserved_setting` the first attempt. On a second attempt it succeeds. It fails if you change the value to something different than currently set. Otherwise setting the value to the same always succeed. For this reason, a retry mechanism was implemented when writing these three registers with a delay between each retry to maximize the success rate as I observed that this helps. Anyway the `storage_control_mode` and `storage_default_mode` registers should be changed only once and the `storage_backup_reserved_setting`, quite seldom. The rest of the registers works fine without any issue.
 
-In any case a cleaner solution is to be expected from the `solaredge_modbes` library and it's currently ongoing - check the open issue [Adding additional parameters](https://github.com/nmakel/solaredge_modbus/issues/36). Till then, I'm not aware of better alternative. I've tried the `Home Assistant` library, but with it the written values are also not properly encoded when writing and you end up in having totally different value in the registers.
+In any case a cleaner solution is to be expected from the `solaredge_modbes` library and it's currently ongoing - check the open issue [Adding additional parameters](https://github.com/nmakel/solaredge_modbus/issues/36). Till then, I'm not aware of better alternative. I've tried the `Home Assistant` [library](https://github.com/binsentsu/home-assistant-solaredge-modbus/tree/master), but with it the written values are also not properly written into some of the inverter registers and you end up in having totally different value in the inverter registers.
