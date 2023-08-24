@@ -17,7 +17,7 @@ CONFIG = []
 # Actual values will be read from 'config.yaml'
 UPDATE_INTERVAL = 120        # Update interval if used as service / from the console.
 UPPER_CHARGING_LIMIT = 80    # Upper charging limit in %
-SOE_DELTA_CHARGE = 10        # When the SOE drops by this amount of %, start charging again
+SOE_DELTA_CHARGE = 5         # When the SOE drops by this amount of %, start charging again
 BACKUP_RESEVE = 10           # Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
 CHARGE_LIMIT = 5000          # Battery maximum charge power in W
 

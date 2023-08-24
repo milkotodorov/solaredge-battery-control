@@ -1,6 +1,6 @@
 #   update_interval: 120              # Update interval if used as service / from the console
 #   upper_charging_limit: 80          # Upper charging limit in %
-#   soe_delta_charge: 10              # When the SOE drops by this amount of %, start charging again
+#   soe_delta_charge: 5              # When the SOE drops by this amount of %, start charging again
 #   backup_reserve: 10                # Charge in % reserved only for backup + SE Home Batteries 48V has 10% reserved energy which cannot be changed/used
 #   charge_limit: 5000                # Battery maximum charge power in W
 #   period_start / period_end: 1-Jan  # Star/End date for the periods. Note that the end date is inclusive. Months in Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
@@ -8,7 +8,7 @@
 defaul_config:
   update_interval: 120
   upper_charging_limit: 80
-  soe_delta_charge: 10
+  soe_delta_charge: 5
   backup_reserve: 10
   charge_limit: 5000
 
@@ -18,7 +18,7 @@ periods:
     period_end: 14-Feb
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
   
@@ -27,7 +27,7 @@ periods:
     period_end: 28-Mar
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
   
@@ -36,7 +36,7 @@ periods:
     period_end: 28-Apr
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
   
@@ -45,7 +45,7 @@ periods:
     period_end: 28-May
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000      
 
@@ -54,7 +54,7 @@ periods:
     period_end: 14-Jun
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
 
@@ -63,7 +63,7 @@ periods:
     period_end: 31-Jul
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000
 
@@ -72,7 +72,7 @@ periods:
     period_end: 21-Aug
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000     
 
@@ -81,7 +81,7 @@ periods:
     period_end: 21-Sep
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000   
 
@@ -90,7 +90,7 @@ periods:
     period_end: 21-Oct
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000   
 
@@ -99,7 +99,7 @@ periods:
     period_end: 30-Nov
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000   
 
@@ -108,6 +108,6 @@ periods:
     period_end: 31-Dec
     config:
       upper_charging_limit: 80
-      soe_delta_charge: 10
+      soe_delta_charge: 5
       backup_reserve: 10
       charge_limit: 5000                                        
