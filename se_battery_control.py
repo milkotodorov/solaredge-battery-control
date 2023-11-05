@@ -436,7 +436,7 @@ def inverter_update_routine():
         LOGGER.info(f"Setting battery charge limit to: {charing_limit_15p} W.")
         set_rc_charge_limit(charing_limit_15p)
 
-    if rc_charge_limit != CHARGE_LIMIT and soe < (UPPER_CHARGING_LIMIT - 5):
+    if rc_charge_limit != CHARGE_LIMIT and soe <= (UPPER_CHARGING_LIMIT - 5):
         LOGGER.info(f"Current battery charge limit: {rc_charge_limit} W.")
         LOGGER.info(f"Setting battery charge limit to: {CHARGE_LIMIT} W.")
         set_rc_charge_limit(CHARGE_LIMIT)
