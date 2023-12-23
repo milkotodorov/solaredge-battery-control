@@ -72,6 +72,7 @@ class registerDataType(enum.Enum):
     ACC32 = 5
     FLOAT32 = 6
     SEFLOAT = 7
+    INT32 = 8
     STRING = 9
 
 
@@ -80,6 +81,7 @@ SUNSPEC_NOTIMPLEMENTED = {
     "UINT32": 0xffffffff,
     "UINT64": 0xffffffffffffffff,
     "INT16": 0x8000,
+    "INT32": 0x80000000,
     "SCALE": 0x8000,
     "ACC32": 0x00000000,
     "FLOAT32": 0x7fc00000,
@@ -127,6 +129,19 @@ BATTERY_STATUS_MAP = [
     "Idle"
 ]
 
+EXPORT_CONTROL_LIMIT_MAP = [
+    "Total",
+    "Per Phase"
+]
+
+REACTIVE_POWER_CONFIG_MAP = [
+    "Fixed CosPhi Mode",
+    "Fixed Q Mode",
+    "CosPhi(P) Mode",
+    "Q(U) + Q(P) Mode",
+    "RRCR Mode"
+]
+
 METER_REGISTER_OFFSETS = [
     0x0,
     0xae,
@@ -145,7 +160,7 @@ class SolarEdge:
     stopbits = 1
     parity = "N"
     baud = 115200
-    wordorder = Endian.Big
+    wordorder = Endian.BIG
 
     def __init__(
         self, host=False, port=False,
@@ -232,7 +247,7 @@ class SolarEdge:
             if len(result.registers) != length:
                 continue
 
-            return BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.Big, wordorder=self.wordorder)
+            return BinaryPayloadDecoder.fromRegisters(result.registers, byteorder=Endian.BIG, wordorder=self.wordorder)
 
         return None
 
@@ -240,17 +255,19 @@ class SolarEdge:
         return self.client.write_registers(address=address, values=value, slave=self.unit)
 
     def _encode_value(self, data, dtype):
-        builder = BinaryPayloadBuilder(byteorder=Endian.Big, wordorder=self.wordorder)
+        builder = BinaryPayloadBuilder(byteorder=Endian.BIG, wordorder=self.wordorder)
 
         try:
-            if dtype == registerDataType.UINT16:
+            if dtype == registerDataType.INT16:
+                builder.add_16bit_int(data)
+            elif dtype == registerDataType.INT32:
+                builder.add_32bit_int(data)
+            elif dtype == registerDataType.UINT16:
                 builder.add_16bit_uint(data)
             elif dtype == registerDataType.UINT32:
                 builder.add_32bit_uint(data)
             elif dtype == registerDataType.UINT64:
                 builder.add_64bit_uint(data)
-            elif dtype == registerDataType.INT16:
-                builder.add_16bit_int(data)
             elif (dtype == registerDataType.FLOAT32 or
                   dtype == registerDataType.SEFLOAT):
                 builder.add_32bit_float(data)
@@ -266,15 +283,17 @@ class SolarEdge:
 
     def _decode_value(self, data, length, dtype, vtype):
         try:
-            if dtype == registerDataType.UINT16:
+            if dtype == registerDataType.INT16:
+                decoded = data.decode_16bit_int()
+            elif dtype == registerDataType.INT32:
+                decoded = data.decode_32bit_int()
+            elif dtype == registerDataType.UINT16:
                 decoded = data.decode_16bit_uint()
             elif (dtype == registerDataType.UINT32 or
                   dtype == registerDataType.ACC32):
                 decoded = data.decode_32bit_uint()
             elif dtype == registerDataType.UINT64:
                 decoded = data.decode_64bit_uint()
-            elif dtype == registerDataType.INT16:
-                decoded = data.decode_16bit_int()
             elif (dtype == registerDataType.FLOAT32 or
                   dtype == registerDataType.SEFLOAT):
                 decoded = data.decode_32bit_float()
@@ -284,6 +303,8 @@ class SolarEdge:
                 raise NotImplementedError(dtype)
 
             if decoded == SUNSPEC_NOTIMPLEMENTED[dtype.name]:
+                return vtype(False)
+            elif decoded != decoded:
                 return vtype(False)
             else:
                 return vtype(decoded)
@@ -404,7 +425,7 @@ class Inverter(SolarEdge):
 
     def __init__(self, *args, **kwargs):
         self.model = "Inverter"
-        self.wordorder = Endian.Big
+        self.wordorder = Endian.BIG
 
         super().__init__(*args, **kwargs)
 
@@ -412,7 +433,7 @@ class Inverter(SolarEdge):
             # name, address, length, register, type, target type, description, unit, batch
             "c_id": (0x9c40, 2, registerType.HOLDING, registerDataType.STRING, str, "SunSpec ID", "", 1),
             "c_did": (0x9c42, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec DID", "", 1),
-            "c_length": (0x9c42, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec Length", "16Bit Words", 1),
+            "c_length": (0x9c43, 1, registerType.HOLDING, registerDataType.UINT16, int, "SunSpec Length", "16Bit Words", 1),
             "c_manufacturer": (0x9c44, 16, registerType.HOLDING, registerDataType.STRING, str, "Manufacturer", "", 1),
             "c_model": (0x9c54, 16, registerType.HOLDING, registerDataType.STRING, str, "Model", "", 1),
             "c_version": (0x9c6c, 8, registerType.HOLDING, registerDataType.STRING, str, "Version", "", 1),
@@ -469,6 +490,18 @@ class Inverter(SolarEdge):
             "rrcr_state": (0xf000, 1, registerType.HOLDING, registerDataType.UINT16, int, "RRCR State", "", 3),
             "active_power_limit": (0xf001, 1, registerType.HOLDING, registerDataType.UINT16, int, "Active Power Limit", "%", 3),
             "cosphi": (0xf002, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "CosPhi", "", 3),
+
+            "commit_power_control_settings": (0xf100, 1, registerType.HOLDING, registerDataType.INT16, int, "Commit Power Control Settings", "", 4),
+            "restore_power_control_default_settings": (0xf101, 1, registerType.HOLDING, registerDataType.INT16, int, "Restore Power Control Default Settings", "", 4),
+
+            "reactive_power_config": (0xf103, 2, registerType.HOLDING, registerDataType.INT32, int, "Reactive Power Config", REACTIVE_POWER_CONFIG_MAP, 4),
+            "reactive_power_response_time": (0xf105, 2, registerType.HOLDING, registerDataType.UINT32, int, "Reactive Power Response Time", "ms", 4),
+
+            "advanced_power_control_enable": (0xf142, 2, registerType.HOLDING, registerDataType.UINT16, int, "Advanced Power Control Enable", "", 4),
+
+            "export_control_mode": (0xf700, 1, registerType.HOLDING, registerDataType.UINT16, int, "Export Control Mode", "", 5),
+            "export_control_limit_mode": (0xf701, 1, registerType.HOLDING, registerDataType.UINT16, int, "Export Control Limit Mode", EXPORT_CONTROL_LIMIT_MAP, 5),
+            "export_control_site_limit": (0xf702, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "Export Control Site Limit", "W", 5)
         }
 
         self.meter_dids = [
@@ -497,7 +530,7 @@ class Meter(SolarEdge):
 
     def __init__(self, offset=False, *args, **kwargs):
         self.model = f"Meter{offset + 1}"
-        self.wordorder = Endian.Big
+        self.wordorder = Endian.BIG
 
         super().__init__(*args, **kwargs)
 
@@ -598,15 +631,17 @@ class StorageInverter(SolarEdge):
 
 	def __init__(self, *args, **kwargs):
 		self.model = "StorageInverter"
-		self.wordorder = Endian.Little
+		self.wordorder = Endian.LITTLE
 
 		super().__init__(*args, **kwargs)
 
 		self.registers = {
-			# name, address, length, register, type, target type, description, unit, batch
-			"export_control_mode": (0xf700, 1, registerType.HOLDING, registerDataType.UINT16, int, "Export Control Mode", "", 1),
-			"export_control_limit_mode": (0xf701, 1, registerType.HOLDING, registerDataType.UINT16, int, "Export Control Limit Mode", "", 1),
-			"export_control_site_limit": (0xf702, 2, registerType.HOLDING, registerDataType.FLOAT32, int, "Export Control Site Limit", "W", 1),
+			# name, address, length, register, type, target type, description, unit, batch      
+      "c_manufacturer": (0x9c44, 16, registerType.HOLDING, registerDataType.STRING, str, "Manufacturer", "", 1),
+      "c_model": (0x9c54, 16, registerType.HOLDING, registerDataType.STRING, str, "Model", "", 1),
+      "c_version": (0x9c6c, 8, registerType.HOLDING, registerDataType.STRING, str, "Version", "", 1),
+      "c_serialnumber": (0x9c74, 16, registerType.HOLDING, registerDataType.STRING, str, "Serial", "", 1),
+      "c_deviceaddress": (0x9c84, 1, registerType.HOLDING, registerDataType.UINT16, int, "Modbus ID", "", 1),
 
 			"storage_control_mode": (0xe004, 1, registerType.HOLDING, registerDataType.UINT16, int, "Storage Control Mode", "", 2),
 			"storage_ac_charge_policy": (0xe005, 1, registerType.HOLDING, registerDataType.UINT16, int, "Storage AC Charge Policy", "", 2),
@@ -618,12 +653,12 @@ class StorageInverter(SolarEdge):
 			"rc_charge_limit": (0xe00e, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Remote Control Command Charge Limit", "W", 2),
 			"rc_discharge_limit": (0xe010, 2, registerType.HOLDING, registerDataType.FLOAT32, float, "Remote Control Command Discharge Limit", "W", 2)
 		}
-
+        
 class Battery(SolarEdge):
 
     def __init__(self, offset=False, *args, **kwargs):
         self.model = f"Battery{offset + 1}"
-        self.wordorder = Endian.Little
+        self.wordorder = Endian.LITTLE
 
         super().__init__(*args, **kwargs)
 
