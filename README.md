@@ -84,8 +84,7 @@ The script requires Python 3.8.x. I've tested it with Python 3.11.4. A Python ve
   ```
   The creation of the python virtual environment must be done only once, when the repository is cloned but note that **it must be activated each time a new console is opened**.
 
-  > [!TIP]
-  > Optionally [`direnv`](https://direnv.net) can be used to automate the activation/deactivation of the python virtual environment upon entering/exiting the project folder.
+  > :bulb: **Tip:** Optionally [`direnv`](https://direnv.net) can be used to automate the activation/deactivation of the python virtual environment upon entering/exiting the project folder.
 
 - Verify whether the python virtual environment is properly activated:
   ```console
