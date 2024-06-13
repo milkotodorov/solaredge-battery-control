@@ -504,13 +504,6 @@ if __name__ == "__main__":
     storage = solaredge_modbus.StorageInverter(parent=inverter)
 
     if args.info:
-        # set_storage_default_mode(7)
-        # set_rc_cmd_mode(3)
-        # set_rc_cmd_timeout(6*3600)
-        # set_storage_backup_reserved(10)
-        # set_rc_discharge_limit(5000)  
-        # set_rc_charge_limit(1000)
-        
         values = read_values()
         # Don't log 'info' mode output into the log file - console output only
         print(json.dumps(values, indent=2))
