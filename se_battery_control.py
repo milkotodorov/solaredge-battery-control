@@ -428,8 +428,8 @@ def inverter_update_routine():
         LOGGER.info("Setting \"set_rc_cmd_mode\" to \"7: Maximize self consumption\".")
         set_rc_cmd_mode(7)
 
-    # For the last 5%, reduce the charging power to 0.15C in order to increase stop charging accurancy
-    if rc_charge_limit > charing_limit_15p and soe >= (UPPER_CHARGING_LIMIT - 5):
+    # For the last 3%, reduce the charging power to 0.15C in order to increase stop charging accurancy
+    if rc_charge_limit > charing_limit_15p and soe >= (UPPER_CHARGING_LIMIT - 3):
         LOGGER.info(f"Battery SoC is {round(soe, 2)}%. " +
                     f"Lowering charging power to {charing_limit_15p} W. (0.15C) in order to increase stop charging accurancy.")
         LOGGER.info(f"Current battery charge limit: {rc_charge_limit} W.")
@@ -504,8 +504,16 @@ if __name__ == "__main__":
     storage = solaredge_modbus.StorageInverter(parent=inverter)
 
     if args.info:
+        # set_storage_default_mode(7)
+        # set_rc_cmd_mode(3)
+        # set_rc_cmd_timeout(6*3600)
+        # set_storage_backup_reserved(10)
+        # set_rc_discharge_limit(5000)  
+        # set_rc_charge_limit(1000)
+        
         values = read_values()
-        LOGGER.info(json.dumps(values, indent=2))
+        # Don't log 'info' mode output into the log file - console output only
+        print(json.dumps(values, indent=2))
         exit()
 
     if args.enable_storage_remote_control_mode:
